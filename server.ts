@@ -19,7 +19,7 @@ async function startServer() {
   const PORT = 3000;
 
   // MongoDB Connection
-  const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://kaifurrahaman145_db_user:kJfHLTXrUisKyp6n@cluster0.isbqz5q.mongodb.net/?appName=Cluster0";
+  const MONGODB_URI = process.env.MONGODB_URI;
   try {
     await mongoose.connect(MONGODB_URI);
     console.log("Connected to MongoDB Atlas successfully");
