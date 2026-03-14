@@ -1,0 +1,7 @@
+{
+  "name": "vibeSnap",
+  "description": "Music suggestion app based on mood and visuals, powered by AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
