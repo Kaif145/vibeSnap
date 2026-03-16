@@ -20,7 +20,7 @@ async function startServer() {
   const PORT = 3000;
 
   // MongoDB Connection
-  const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://kaifurrahaman145_db_user:YOUR_PASSWORD@cluster0.isbqz5q.mongodb.net/myDatabase";
+  const MONGODB_URI = process.env.MONGODB_URI;
   try {
     await mongoose.connect(MONGODB_URI);
     console.log("Connected to MongoDB Atlas successfully");
@@ -28,7 +28,8 @@ async function startServer() {
     console.error("MongoDB connection error:", error);
   }
 
-  app.use(express.json());
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
   app.use(cookieParser());
 
   // Spotify Config
