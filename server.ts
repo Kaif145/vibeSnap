@@ -452,6 +452,10 @@ async function startServer() {
         return res.status(400).json({ error: "GEMINI_API_KEY is missing in Render environment variables." });
       }
       
+      if (err.message?.includes("Quota exceeded") || err.message?.includes("429")) {
+        return res.status(429).json({ error: "Server busy: Quota Exceeded - Please try again in a minute." });
+      }
+      
       res.status(500).json({ error: err.message || "Failed to analyze mood" });
     }
   });
@@ -534,6 +538,10 @@ async function startServer() {
       }
       if (err.message?.includes("GEMINI_API_KEY is not defined")) {
         return res.status(400).json({ error: "GEMINI_API_KEY is missing in Render environment variables." });
+      }
+      
+      if (err.message?.includes("Quota exceeded") || err.message?.includes("429")) {
+        return res.status(429).json({ error: "Server busy: Quota Exceeded - Please try again in a minute." });
       }
       
       res.status(500).json({ error: err.message || "Failed to analyze photo" });
