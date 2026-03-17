@@ -20,7 +20,7 @@ async function startServer() {
   const PORT = 3000;
 
   // MongoDB Connection
-  const MONGODB_URI = process.env.MONGODB_URI;
+  const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://kaifurrahaman145_db_user:YOUR_PASSWORD@cluster0.isbqz5q.mongodb.net/myDatabase";
   try {
     await mongoose.connect(MONGODB_URI);
     console.log("Connected to MongoDB Atlas successfully");
@@ -356,10 +356,18 @@ async function startServer() {
 
   // Gemini AI Endpoints
   const getAI = () => {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    const rawKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    const apiKey = rawKey ? rawKey.trim() : "";
+    
     if (!apiKey) {
       throw new Error("GEMINI_API_KEY is not defined in the environment.");
     }
+    
+    // Basic validation to catch common copy-paste errors
+    if (apiKey.startsWith('"') || apiKey.startsWith("'")) {
+      console.warn("Warning: GEMINI_API_KEY starts with a quote. It should be the raw key.");
+    }
+    
     return new GoogleGenAI({ apiKey });
   };
 
@@ -429,10 +437,22 @@ async function startServer() {
         }
       });
 
-      res.json(JSON.parse(response.text || "{}"));
+      let responseText = response.text || "{}";
+      // Strip markdown code blocks if present
+      responseText = responseText.replace(/^```json\n?/, "").replace(/\n?```$/, "").trim();
+      
+      res.json(JSON.parse(responseText));
     } catch (err: any) {
       console.error("Analyze Mood Error:", err.message);
-      res.status(500).json({ error: "Failed to analyze mood" });
+      
+      if (err.message?.includes("API key not valid") || err.message?.includes("API_KEY_INVALID")) {
+        return res.status(400).json({ error: "Invalid Gemini API Key. Please check your Render environment variables." });
+      }
+      if (err.message?.includes("GEMINI_API_KEY is not defined")) {
+        return res.status(400).json({ error: "GEMINI_API_KEY is missing in Render environment variables." });
+      }
+      
+      res.status(500).json({ error: err.message || "Failed to analyze mood" });
     }
   });
 
@@ -501,15 +521,29 @@ async function startServer() {
         }
       });
 
-      res.json(JSON.parse(response.text || "{}"));
+      let responseText = response.text || "{}";
+      // Strip markdown code blocks if present
+      responseText = responseText.replace(/^```json\n?/, "").replace(/\n?```$/, "").trim();
+      
+      res.json(JSON.parse(responseText));
     } catch (err: any) {
       console.error("Analyze Photo Error:", err.message);
-      res.status(500).json({ error: "Failed to analyze photo" });
+      
+      if (err.message?.includes("API key not valid") || err.message?.includes("API_KEY_INVALID")) {
+        return res.status(400).json({ error: "Invalid Gemini API Key. Please check your Render environment variables." });
+      }
+      if (err.message?.includes("GEMINI_API_KEY is not defined")) {
+        return res.status(400).json({ error: "GEMINI_API_KEY is missing in Render environment variables." });
+      }
+      
+      res.status(500).json({ error: err.message || "Failed to analyze photo" });
     }
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER === "true";
+  
+  if (!isProduction) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
